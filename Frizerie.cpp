@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -32,6 +32,33 @@ public:
         in >> s.pret;
         return in;
     }
+
+    Serviciu& operator+=(float valoare) {
+        pret += valoare;
+        return *this;
+    }
+
+    Serviciu& operator-=(float valoare) {
+        pret -= valoare;
+        return *this;
+    }
+
+    bool operator>(const Serviciu& s) const {
+        return pret > s.pret;
+    }
+
+    bool operator<(const Serviciu& s) const {
+        return pret < s.pret;
+    }
+
+    Serviciu& operator=(float valoare) {
+        pret = valoare;
+        return *this;
+    }
+
+    bool operator==(const Serviciu& s) const {
+        return pret == s.pret;
+    }
 };
 
 class Tuns : public Serviciu {
@@ -47,8 +74,13 @@ public:
         in >> pret;
     }
 
-    void scrieInFisierBinar(ofstream& out) const override {}
-    void citesteDinFisierBinar(ifstream& in) override {}
+    void scrieInFisierBinar(ofstream& out) const override {
+        out.write((char*)&pret, sizeof(pret));
+    }
+
+    void citesteDinFisierBinar(ifstream& in) override {
+        in.read((char*)&pret, sizeof(pret));
+    }
 
     friend ostream& operator<<(ostream& out, const Tuns& t) {
         out << "Tuns - Pret: " << t.pret << " lei";
@@ -69,8 +101,13 @@ public:
         in >> pret;
     }
 
-    void scrieInFisierBinar(ofstream& out) const override {}
-    void citesteDinFisierBinar(ifstream& in) override {}
+    void scrieInFisierBinar(ofstream& out) const override {
+        out.write((char*)&pret, sizeof(pret));
+    }
+
+    void citesteDinFisierBinar(ifstream& in) override {
+        in.read((char*)&pret, sizeof(pret));
+    }
 
     friend ostream& operator<<(ostream& out, const Frezat& f) {
         out << "Frezat - Pret: " << f.pret << " lei";
@@ -83,8 +120,13 @@ public:
     Barbierit(float pret = 5) : Serviciu(pret) {}
     float calcul_pret() const override { return pret; }
 
-    void scrieInFisierText(ofstream& out) const override {}
-    void citesteDinFisierText(ifstream& in) override {}
+    void scrieInFisierText(ofstream& out) const override {
+        out << "Barbierit " << pret << endl;
+    }
+
+    void citesteDinFisierText(ifstream& in) override {
+        in >> pret;
+    }
 
     void scrieInFisierBinar(ofstream& out) const override {
         out.write((char*)&pret, sizeof(pret));
@@ -118,16 +160,16 @@ public:
         strcpy(this->adresa, adresa);
     }
 
-    ~Frizerie() {
-        delete[] adresa;
-        for (int i = 0; i < nr_servicii; i++) {
-            delete servicii[i];
-        }
-        delete[] servicii;
-    }
+    //~Frizerie() {
+    //    delete[] adresa;
+    //    for (int i = 0; i < nr_servicii; i++) {
+    //        delete servicii[i];
+    //    }
+    //    delete[] servicii;
+    //}
 
     Frizerie& operator+=(Serviciu* serviciu) {
-        Serviciu** temp = new Serviciu*[nr_servicii + 1];
+        Serviciu** temp = new Serviciu * [nr_servicii + 1];
         for (int i = 0; i < nr_servicii; i++) {
             temp[i] = servicii[i];
         }
@@ -136,6 +178,16 @@ public:
         servicii = temp;
         nr_servicii++;
         return *this;
+    }
+
+    Frizerie operator+(int frizeri) const {
+        Frizerie temp(*this);
+        temp.nr_frizeri += frizeri;
+        return temp;
+    }
+
+    bool operator==(const Frizerie& f) const {
+        return nr_frizeri == f.nr_frizeri && strcmp(adresa, f.adresa) == 0;
     }
 
     friend ostream& operator<<(ostream& out, const Frizerie& f) {
@@ -162,7 +214,7 @@ private:
 public:
     Salon() : numeSalon("Necunoscut"), nrAngajati(0), arePromotii(false) {}
 
-    Salon(const string& nume, int nrAngajati, bool arePromotii) 
+    Salon(const string& nume, int nrAngajati, bool arePromotii)
         : numeSalon(nume), nrAngajati(nrAngajati), arePromotii(arePromotii) {}
 
     ~Salon() {
@@ -177,6 +229,18 @@ public:
 
     void adaugaServiciu(Serviciu* serviciu) {
         serviciiDisponibile.push_back(serviciu);
+    }
+
+    bool operator==(const Salon& f) const {
+        return this->nrAngajati==f.nrAngajati;
+    }
+
+    void operator()() {
+        cout << "Apel operator functie " << endl;
+    }
+
+    bool operator!() {
+        return !this->arePromotii;
     }
 
     friend ostream& operator<<(ostream& out, const Salon& s) {
@@ -199,7 +263,6 @@ int main() {
     vector<Tuns> vectorTuns;
     vector<Frezat> vectorFrezat;
     vector<Barbierit> vectorBarbierit;
-
     int n;
 
     cout << "Introduceti numarul de obiecte Tuns: ";
@@ -229,20 +292,68 @@ int main() {
         vectorBarbierit.push_back(b);
     }
 
-    cout << "\nVector Tuns:\n";
-    for (const auto& t : vectorTuns) {
-        cout << t << endl;
-    }
+    Tuns t1(20), t2(30);
+    cout << "Tuns 1: " << t1 << "\nTuns 2: " << t2 << endl;
+    t1 += 5;
+    t2 -= 10;
+    cout << "Tuns 1 dupa +=: " << t1 << endl;
+    cout << "Tuns 2 dupa -=: " << t2 << endl;
+    cout << "Tuns 1 > Tuns 2: " << (t1 > t2 ? "Da" : "Nu") << endl;
+    cout << "Tuns 1 < Tuns 2: " << (t1 < t2 ? "Da" : "Nu") << endl;
+    cout << "Tuns 1 == Tuns 2: " << (t1 == t2 ? "Da" : "Nu") << endl;
+    t1 = 40;
+    cout << "Tuns 1 dupa =: " << t1 << endl;
 
-    cout << "\nVector Frezat:\n";
-    for (const auto& f : vectorFrezat) {
-        cout << f << endl;
-    }
+    Frezat f1(50), f2(60);
+    cout << "Frezat 1: " << f1 << "\nFrezat 2: " << f2 << endl;
+    f1 += 10;
+    f2 -= 15;
+    cout << "Frezat 1 dupa +=: " << f1 << endl;
+    cout << "Frezat 2 dupa -=: " << f2 << endl;
+    cout << "Frezat 1 > Frezat 2: " << (f1 > f2 ? "Da" : "Nu") << endl;
+    cout << "Frezat 1 < Frezat 2: " << (f1 < f2 ? "Da" : "Nu") << endl;
+    cout << "Frezat 1 == Frezat 2: " << (f1 == f2 ? "Da" : "Nu") << endl;
+    f1 = 70;
+    cout << "Frezat 1 dupa =: " << f1 << endl;
 
-    cout << "\nVector Barbierit:\n";
-    for (const auto& b : vectorBarbierit) {
-        cout << b << endl;
-    }
+    Barbierit b1(5), b2(10);
+    cout << "Barbierit 1: " << b1 << "\nBarbierit 2: " << b2 << endl;
+    b1 += 2;
+    b2 -= 3;
+    cout << "Barbierit 1 dupa +=: " << b1 << endl;
+    cout << "Barbierit 2 dupa -=: " << b2 << endl;
+    cout << "Barbierit 1 > Barbierit 2: " << (b1 > b2 ? "Da" : "Nu") << endl;
+    cout << "Barbierit 1 < Barbierit 2: " << (b1 < b2 ? "Da" : "Nu") << endl;
+    cout << "Barbierit 1 == Barbierit 2: " << (b1 == b2 ? "Da" : "Nu") << endl;
+    b1 = 8;
+    cout << "Barbierit 1 dupa =: " << b1 << endl;
+
+    Frizerie fz1("Strada Mare", 5, "Frizeria X", true);
+    Frizerie fz2("Strada Mica", 3, "Frizeria Y", false);
+    cout << "\nOperator + pentru Frizerie: " << fz1 + 2 << endl;
+    cout << "Operator == pentru Frizerie: " << (fz1 == fz2 ? "Da" : "Nu") << endl;
+
+    Salon s1("Salonul 1", 10, true);
+    Salon s2("Salonul 2", 12, false);
+    cout << "\nOperator == pentru Salon: " << (s1 == s2 ? "Da" : "Nu") << endl;
+
+    ofstream outText("servicii.txt");
+    for (const auto& t : vectorTuns) t.scrieInFisierText(outText);
+    for (const auto& f : vectorFrezat) f.scrieInFisierText(outText);
+    for (const auto& b : vectorBarbierit) b.scrieInFisierText(outText);
+    outText.close();
+
+    ofstream outBinary("servicii.bin", ios::binary);
+    for (const auto& t : vectorTuns) t.scrieInFisierBinar(outBinary);
+    for (const auto& f : vectorFrezat) f.scrieInFisierBinar(outBinary);
+    for (const auto& b : vectorBarbierit) b.scrieInFisierBinar(outBinary);
+    outBinary.close();
+
+    ifstream inBinary("servicii.bin", ios::binary);
+    for (auto& t : vectorTuns) t.citesteDinFisierBinar(inBinary);
+    for (auto& f : vectorFrezat) f.citesteDinFisierBinar(inBinary);
+    for (auto& b : vectorBarbierit) b.citesteDinFisierBinar(inBinary);
+    inBinary.close();
 
     Salon salon("Salon de Lux", 15, true);
     salon.adaugaFrizerie(Frizerie("Strada Mare", 3, "Frizeria Moderna", true));
@@ -254,3 +365,4 @@ int main() {
 
     return 0;
 }
+
